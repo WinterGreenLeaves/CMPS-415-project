@@ -10,16 +10,16 @@ class Database {
     }
 
     _connect() {
-        if (!process.env.MONGO_URI) {
-            console.error("❌ MONGO_URI is not set in environment variables");
-            process.exit(1);
+        // temporarily bypass the database requirement
+        if (!process.env.MONGODB_URI) {
+            console.log("⚠️ Running in UI Test Mode (No Database Connection)");
+            return; // use return instead of process.exit(1)
         }
 
-        mongoose.connect(process.env.MONGO_URI)
+        mongoose.connect(process.env.MONGODB_URI)
             .then(() => console.log("✅ MongoDB connected"))
             .catch(err => {
                 console.error("❌ MongoDB connection error:", err);
-                process.exit(1);
             });
     }
 }
