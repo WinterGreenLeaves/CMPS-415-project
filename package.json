@@ -2,8 +2,9 @@
   "name": "cmps-415-project",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,8 +20,10 @@
   },
   "homepage": "https://github.com/WinterGreenLeaves/CMPS-415-project#readme",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-session": "^1.18.1",
     "mongoose": "^9.4.1"
   }
 }

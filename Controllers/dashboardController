@@ -1,0 +1,55 @@
+const User = require('../models/User');
+const Topic = require('../models/Topic');
+const Message = require('../models/Message');
+
+//on login show 2 most recent messages for subscribed topics
+//shows topics available for subscription and unsubscribe info 
+exports.getDashboard = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+ 
+        //get user with subscriptions
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+ 
+        //build the dashboard for each subscribed topic ... get 2 most recent messages
+        const subscribedTopics = [];
+ 
+        for (const topicId of user.subscriptions) {
+            const topic = await Topic.findById(topicId);
+            if (!topic) continue;
+ 
+            //access count when viewing topic on dashboard
+            topic.accessCount += 1;
+            await topic.save();
+ 
+            //get 2 most recent messages for this topic
+            const messages = await Message.find({ topic: topicId })
+                .sort({ createdAt: -1 })
+                .limit(2)
+                .populate('author', 'username');
+ 
+            subscribedTopics.push({
+                topicId: topic._id,
+                title: topic.title,
+                recentMessages: messages
+            });
+        }
+ 
+        //get all topics the user isn't subscribed to for the subscription list
+        const allTopics = await Topic.find({
+            _id: { $nin: user.subscriptions }
+        }, 'title');
+ 
+        res.json({
+            username: user.username,
+            subscribedTopics: subscribedTopics,
+            availableTopics: allTopics,
+            notifications: user.notifications
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to load dashboard: ' + err.message });
+    }
+};
