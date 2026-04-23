@@ -1,0 +1,48 @@
+<html>
+<body>
+<h1>Dashboard - Welcome <%= username %></h1>
+
+<p><a href="/topics">View all available topics for subscription</a>
+<p><a href="/statistics">View Topic Access Stats</a>
+
+<h2>Your Subscribed Topics</h2>
+
+<% if (topics && topics.length > 0) { %>
+    <% topics.forEach(function(topic) { %>
+        <h3>Topic: <%= topic.name %></h3>
+        
+        <form action="/unsubscribe" method="POST">
+            <input type="hidden" name="topicId" value="<%= topic._id %>">
+            <input type="submit" value="Unsubscribe">
+        </form>
+
+        <p><b>Recent Messages:</b>
+        <ul>
+        <% if (topic.messages && topic.messages.length > 0) { %>
+            <% topic.messages.forEach(function(msg) { %>
+                <li><%= msg.content %> - <i><%= msg.author ? msg.author.username : 'Unknown' %></i></li>
+            <% }); %>
+        <% } else { %>
+            <li>No messages yet.</li>
+        <% } %>
+        </ul>
+
+        <p>Post a message to this topic:
+        <form action="/postMessage" method="POST">
+            <input type="hidden" name="topicId" value="<%= topic._id %>">
+            <input type="text" name="messageText" required>
+            <input type="submit" value="Post">
+        </form>
+        <hr>
+    <% }); %>
+<% } else { %>
+    <p>You are not subscribed to any topics.
+<% } %>
+
+<p><h3>Start a New Topic</h3>
+<form action="/createTopic" method="POST">
+<p>Topic Name: <input type="text" name="topicName" required>
+<p><input type="submit" value="Create and Subscribe"></form>
+
+</body>
+</html>

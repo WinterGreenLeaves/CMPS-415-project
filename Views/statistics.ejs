@@ -1,0 +1,18 @@
+<html>
+<body>
+<h1>Topic Access Statistics</h1>
+
+<ul>
+<% if (topics && topics.length > 0) { %>
+    <% topics.forEach(function(topic) { %>
+        <li><b><%= topic.title %></b>: Accessed <%= topic.accessCount %> times</li>
+    <% }); %>
+<% } else { %>
+    <li>No topics available.</li>
+<% } %>
+</ul>
+
+<p><a href="/dashboard">Return to Dashboard</a>
+
+</body>
+</html>

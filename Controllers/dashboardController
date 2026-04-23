@@ -11,7 +11,7 @@ exports.getDashboard = async (req, res) => {
         //get user with subscriptions
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ error: 'User not found' });
+            return res.status(404).send('User not found');
         }
  
         //build the dashboard for each subscribed topic ... get 2 most recent messages
@@ -31,10 +31,11 @@ exports.getDashboard = async (req, res) => {
                 .limit(2)
                 .populate('author', 'username');
  
+            //map keys
             subscribedTopics.push({
-                topicId: topic._id,
-                title: topic.title,
-                recentMessages: messages
+                _id: topic._id,
+                name: topic.title, 
+                messages: messages 
             });
         }
  
@@ -43,13 +44,68 @@ exports.getDashboard = async (req, res) => {
             _id: { $nin: user.subscriptions }
         }, 'title');
  
-        res.json({
+        //dashboard view
+        res.render('dashboard', {
             username: user.username,
-            subscribedTopics: subscribedTopics,
+            topics: subscribedTopics, 
             availableTopics: allTopics,
             notifications: user.notifications
         });
     } catch (err) {
-        res.status(500).json({ error: 'Failed to load dashboard: ' + err.message });
+        res.status(500).send('Failed to load dashboard: ' + err.message);
+    }
+};
+
+//get topic statistics
+exports.getStatistics = async (req, res) => {
+    try {
+        const topics = await Topic.find({}).sort({ accessCount: -1 });
+        res.render('statistics', { topics: topics });
+    } catch (err) {
+        res.status(500).send('Failed to load statistics: ' + err.message);
+    }
+};
+
+exports.createTopic = async (req, res) => {
+    try {
+        const { topicName } = req.body; 
+        const userId = req.session.userId;
+
+        const newTopic = new Topic({
+            title: topicName,
+            subscribers: [userId], 
+            accessCount: 0
+        });
+        await newTopic.save();
+
+        await User.findByIdAndUpdate(userId, {
+            $push: { subscriptions: newTopic._id }
+        });
+        res.redirect('/dashboard');
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to create topic: ' + err.message });
+    }
+};
+
+exports.postMessage = async (req, res) => {
+    try {
+        const { topicId, messageText } = req.body;
+        const message = new Message({ 
+            content: messageText, 
+            topic: topicId, 
+            author: req.session.userId 
+        });
+        await message.save();
+
+        const topic = await Topic.findById(topicId).populate('subscribers');
+        const notification = `New post in ${topic.title}!`;
+        
+        for (let user of topic.subscribers) {
+            user.notifications.push(notification);
+            await user.save();
+        }
+        res.redirect('/dashboard');
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to post message: ' + err.message });
     }
 };

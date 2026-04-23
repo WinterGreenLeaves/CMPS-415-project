@@ -10,16 +10,18 @@ class Database {
     }
 
     _connect() {
-        if (!process.env.MONGO_URI) {
-            console.error("❌ MONGO_URI is not set in environment variables");
-            process.exit(1);
+        // 1. Check for the key using Bryant's name
+        if (!process.env.MONGO_URI) { 
+            console.warn("⚠️ Running in UI Test Mode (No Database Connection)");
+            this.connection = null;
+            return;
         }
 
-        mongoose.connect(process.env.MONGO_URI)
+        // 2. Actually USE the key with the SAME name
+        mongoose.connect(process.env.MONGO_URI) // This was still MONGODB_URI in your snippet
             .then(() => console.log("✅ MongoDB connected"))
             .catch(err => {
                 console.error("❌ MongoDB connection error:", err);
-                process.exit(1);
             });
     }
 }
