@@ -1,0 +1,28 @@
+<html>
+<head>
+    <title>Available Topics</title>
+</head>
+<body>
+    <h1>Topics Available for Subscription</h1>
+
+    <ul>
+        <% if (topics && topics.length > 0) { %>
+            <% topics.forEach(function(topic) { %>
+                <li>
+                    <strong><%= topic.title %></strong> 
+                    <form action="/subscribe" method="POST" style="display:inline;">
+                        <input type="hidden" name="topicId" value="<%= topic._id %>">
+                        <input type="submit" value="Subscribe">
+                    </form>
+                </li>
+            <% }); %>
+        <% } else { %>
+            <p>You are already subscribed to everything, or no topics exist yet!</p>
+        <% } %>
+    </ul>
+
+    <br>
+    <a href="/dashboard">Back to Dashboard</a>
+
+</body>
+</html>

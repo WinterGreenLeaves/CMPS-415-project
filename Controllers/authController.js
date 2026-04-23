@@ -65,3 +65,13 @@ exports.logout = (req, res) => {
         res.redirect('/login');
     });
 };
+
+exports.logout = (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.error("Failed to destroy session:", err);
+            return res.status(500).send("Could not log out.");
+        }
+        res.redirect('/login');
+    });
+};

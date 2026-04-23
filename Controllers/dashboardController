@@ -109,3 +109,61 @@ exports.postMessage = async (req, res) => {
         res.status(500).json({ error: 'Failed to post message: ' + err.message });
     }
 };
+
+// View Available Topics to Subscribe To
+exports.getAvailableTopics = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const user = await User.findById(userId);
+        
+        // Find all topics the user is NOT subscribed to
+        const availableTopics = await Topic.find({ _id: { $nin: user.subscriptions } });
+        
+        res.render('availableTopics', { topics: availableTopics });
+    } catch (err) {
+        res.status(500).send("Error loading available topics.");
+    }
+};
+
+exports.unsubscribe = async (req, res) => {
+    try {
+        const { topicId } = req.body;
+        const userId = req.session.userId;
+
+        // 1. Remove topic from User's subscriptions
+        await User.findByIdAndUpdate(userId, {
+            $pull: { subscriptions: topicId }
+        });
+
+        // 2. Remove user from Topic's subscribers
+        await Topic.findByIdAndUpdate(topicId, {
+            $pull: { subscribers: userId }
+        });
+
+        res.redirect('/dashboard');
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to unsubscribe: ' + err.message });
+    }
+};
+
+exports.subscribe = async (req, res) => {
+    try {
+        const { topicId } = req.body;
+        const userId = req.session.userId;
+
+        // 1. Add topic to User's subscriptions
+        await User.findByIdAndUpdate(userId, {
+            $addToSet: { subscriptions: topicId } // $addToSet prevents duplicates!
+        });
+
+        // 2. Add user to Topic's subscribers
+        await Topic.findByIdAndUpdate(topicId, {
+            $addToSet: { subscribers: userId }
+        });
+
+        // Send them back to the dashboard so they can see it
+        res.redirect('/dashboard');
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to subscribe: ' + err.message });
+    }
+};
