@@ -2,36 +2,29 @@ const User = require('../models/User');
 const Topic = require('../models/Topic');
 const Message = require('../models/Message');
 
-//on login show 2 most recent messages for subscribed topics
-//shows topics available for subscription and unsubscribe info 
 exports.getDashboard = async (req, res) => {
     try {
         const userId = req.session.userId;
  
-        //get user with subscriptions
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).send('User not found');
         }
  
-        //build the dashboard for each subscribed topic ... get 2 most recent messages
         const subscribedTopics = [];
  
         for (const topicId of user.subscriptions) {
             const topic = await Topic.findById(topicId);
             if (!topic) continue;
  
-            //access count when viewing topic on dashboard
             topic.accessCount += 1;
             await topic.save();
  
-            //get 2 most recent messages for this topic
             const messages = await Message.find({ topic: topicId })
                 .sort({ createdAt: -1 })
                 .limit(2)
                 .populate('author', 'username');
  
-            //map keys
             subscribedTopics.push({
                 _id: topic._id,
                 name: topic.title, 
@@ -39,14 +32,13 @@ exports.getDashboard = async (req, res) => {
             });
         }
  
-        //get all topics the user isn't subscribed to for the subscription list
         const allTopics = await Topic.find({
             _id: { $nin: user.subscriptions }
         }, 'title');
  
-        //dashboard view
         res.render('dashboard', {
             username: user.username,
+            user: user,
             topics: subscribedTopics, 
             availableTopics: allTopics,
             notifications: user.notifications
@@ -56,7 +48,6 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
-//get topic statistics
 exports.getStatistics = async (req, res) => {
     try {
         const topics = await Topic.find({}).sort({ accessCount: -1 });
@@ -110,13 +101,11 @@ exports.postMessage = async (req, res) => {
     }
 };
 
-// View Available Topics to Subscribe To
 exports.getAvailableTopics = async (req, res) => {
     try {
         const userId = req.session.userId;
         const user = await User.findById(userId);
         
-        // Find all topics the user is NOT subscribed to
         const availableTopics = await Topic.find({ _id: { $nin: user.subscriptions } });
         
         res.render('availableTopics', { topics: availableTopics });
@@ -130,12 +119,10 @@ exports.unsubscribe = async (req, res) => {
         const { topicId } = req.body;
         const userId = req.session.userId;
 
-        // 1. Remove topic from User's subscriptions
         await User.findByIdAndUpdate(userId, {
             $pull: { subscriptions: topicId }
         });
 
-        // 2. Remove user from Topic's subscribers
         await Topic.findByIdAndUpdate(topicId, {
             $pull: { subscribers: userId }
         });
@@ -151,19 +138,46 @@ exports.subscribe = async (req, res) => {
         const { topicId } = req.body;
         const userId = req.session.userId;
 
-        // 1. Add topic to User's subscriptions
         await User.findByIdAndUpdate(userId, {
-            $addToSet: { subscriptions: topicId } // $addToSet prevents duplicates!
+            $addToSet: { subscriptions: topicId }
         });
 
-        // 2. Add user to Topic's subscribers
         await Topic.findByIdAndUpdate(topicId, {
             $addToSet: { subscribers: userId }
         });
 
-        // Send them back to the dashboard so they can see it
         res.redirect('/dashboard');
     } catch (err) {
         res.status(500).json({ error: 'Failed to subscribe: ' + err.message });
+    }
+};
+
+exports.getProfile = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const user = await User.findById(userId);
+        
+        res.render('profile', { user: user });
+    } catch (err) {
+        res.status(500).send("Error loading profile.");
+    }
+};
+
+exports.updateColors = async (req, res) => {
+    try {
+        const userId = req.session.userId;
+        const { primaryColor, accentColor, backgroundColor, textColor, headerColor } = req.body;
+        
+        await User.findByIdAndUpdate(userId, {
+            'colorPreferences.primaryColor': primaryColor || '#291e91',
+            'colorPreferences.accentColor': accentColor || '#efdf88',
+            'colorPreferences.backgroundColor': backgroundColor || '#000000',
+            'colorPreferences.textColor': textColor || '#9eb4ed',
+            'colorPreferences.headerColor': headerColor || '#271274'
+        });
+        
+        res.redirect('/dashboard');
+    } catch (err) {
+        res.status(500).json({ error: 'Failed to update colors: ' + err.message });
     }
 };

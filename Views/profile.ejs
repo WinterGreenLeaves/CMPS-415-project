@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Topical Storm</title>
+    <style>
+        :root {
+            --primary-color: #a3d7ff;
+            --accent-color: #1f81f0;
+            --bg-color: #00212f;
+            --text-color: #63b8e2;
+            --header-color: #7843da;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+        
+        .app-header {
+            background: linear-gradient(135deg, var(--header-color), var(--primary-color));
+            color: black;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .app-header h1 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .app-header h1::before {
+            content: '💬';
+            font-size: 1.8rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .header-btn {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .header-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+        
+        .profile-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .profile-header h1 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .profile-header p {
+            color: #8f94c1;
+        }
+        
+        .profile-card {
+            background: var(--bg-color);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .profile-card h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent-color);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        
+        .user-details h3 {
+            color: var(--text-color);
+            margin-bottom: 5px;
+        }
+        
+        .user-details p {
+            color: #8f94c1;
+            font-size: 0.9rem;
+        }
+        
+        /* Color Customization */
+        .color-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .color-group {
+            background: #8f94c1;
+            padding: 20px;
+            border-radius: 15px;
+        }
+        
+        .color-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+        
+        .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .color-input-wrapper input[type="color"] {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        
+        .color-input-wrapper input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #eee;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .color-input-wrapper input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        /* Preview */
+        .preview-section {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px dashed var(--primary-color);
+        }
+        
+        .preview-section h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+        }
+        
+        .preview-box {
+            padding: 20px;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        
+        .preview-header {
+            padding: 10px 15px;
+            border-radius: 8px 8px 0 0;
+            color: black;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .preview-button {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .preview-text {
+            padding: 10px;
+            border-radius: 8px;
+        }
+        
+        /* Form Actions */
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .save-btn {
+            background: var(--primary-color);
+            color: black;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .save-btn:hover {
+            background: var(--header-color);
+        }
+        
+        .reset-btn {
+            background: #eee;
+            color: #8f94c1;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .reset-btn:hover {
+            background: #ddd;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 30px;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Preset Colors */
+        .preset-section {
+            margin-top: 20px;
+        }
+        
+        .preset-section h4 {
+            margin-bottom: 15px;
+            color: var(--text-color);
+        }
+        
+        .preset-colors {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .preset-btn {
+            padding: 8px 15px;
+            border: 2px solid #ddd;
+            border-radius: 20px;
+            background: black;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        
+        .preset-btn:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body>
+    <header class="app-header">
+        <h1>Topical Storm</h1>
+        <div class="header-actions">
+            <a href="/dashboard" class="header-btn">Dashboard</a>
+            <a href="/topics" class="header-btn">Topics</a>
+            <a href="/statistics" class="header-btn">Statistics</a>
+            <a href="/auth/logout" class="header-btn" style="background: rgba(255,255,255,0.2); color: black;">Logout</a>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="profile-header">
+            <h1>User Profile</h1>
+            <p>Customize your messenger experience</p>
+        </div>
+        
+        <!-- User Info Card -->
+        <div class="profile-card">
+            <h2>Account Information</h2>
+            <div class="user-info">
+                <div class="avatar"><%= user.username.charAt(0).toUpperCase() %></div>
+                <div class="user-details">
+                    <h3><%= user.username %></h3>
+                    <p>Member since: <%= new Date(user.createdAt).toLocaleDateString() %></p>
+                    <p>Subscribed Topics: <%= user.subscriptions ? user.subscriptions.length : 0 %></p>
+                </div>
+            </div>
+        </div>
+        
+        <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+    </div>
+    
+    <script>
+        // Sync color pickers with text inputs
+        const colorMappings = [
+            { picker: 'primaryColorPicker', text: 'primaryColor' },
+            { picker: 'accentColorPicker', text: 'accentColor' },
+            { picker: 'headerColorPicker', text: 'headerColor' },
+            { picker: 'bgColorPicker', text: 'backgroundColor' },
+            { picker: 'textColorPicker', text: 'textColor' }
+        ];
+        
+        colorMappings.forEach(function(mapping) {
+            document.getElementById(mapping.picker).addEventListener('input', function() {
+                document.getElementById(mapping.text).value = this.value;
+                updatePreview();
+            });
+            
+            document.getElementById(mapping.text).addEventListener('input', function() {
+                if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+                    document.getElementById(mapping.picker).value = this.value;
+                    updatePreview();
+                }
+            });
+        });
+        
+        function updatePreview() {
+            const root = document.documentElement;
+            root.style.setProperty('--preview-primary', document.getElementById('primaryColor').value);
+            root.style.setProperty('--preview-accent', document.getElementById('accentColor').value);
+            root.style.setProperty('--preview-header', document.getElementById('headerColor').value);
+            root.style.setProperty('--preview-bg', document.getElementById('backgroundColor').value);
+            root.style.setProperty('--preview-text', document.getElementById('textColor').value);
+            
+            document.getElementById('previewHeader').style.background = `linear-gradient(135deg, ${document.getElementById('headerColor').value}, ${document.getElementById('primaryColor').value})`;
+            document.getElementById('previewButton').style.background = document.getElementById('accentColor').value;
+            document.getElementById('previewButton').style.color = 'var(--bg-color)';
+            document.getElementById('previewText').style.background = document.getElementById('backgroundColor').value;
+            document.getElementById('previewText').style.color = document.getElementById('textColor').value;
+        }
+        
+        // Preset color schemes
+        const presets = {
+            classic: {
+                primaryColor: '#2E7D32',
+                accentColor: '#FFD700',
+                headerColor: '#1B5E20',
+                backgroundColor: '#F5F5F5',
+                textColor: 'var(--bg-color)333'
+            },
+            ocean: {
+                primaryColor: '#1565C0',
+                accentColor: '#00BCD4',
+                headerColor: '#0D47A1',
+                backgroundColor: '#E3F2FD',
+                textColor: '#1565C0'
+            },
+            sunset: {
+                primaryColor: '#E65100',
+                accentColor: '#FF9800',
+                headerColor: '#BF360C',
+                backgroundColor: '#FFF3E0',
+                textColor: '#3E2723'
+            },
+            royal: {
+                primaryColor: '#6A1B9A',
+                accentColor: '#AB47BC',
+                headerColor: '#4A148C',
+                backgroundColor: '#F3E5F5',
+                textColor: '#4A148C'
+            },
+            dark: {
+                primaryColor: '#424242',
+                accentColor: '#FFC107',
+                headerColor: '#212121',
+                backgroundColor: '#121212',
+                textColor: '#E0E0E0'
+            },
+            rose: {
+                primaryColor: '#C2185B',
+                accentColor: '#F48FB1',
+                headerColor: '#880E4F',
+                backgroundColor: '#FCE4EC',
+                textColor: '#880E4F'
+            }
+        };
+        
+        function applyPreset(presetName) {
+            const preset = presets[presetName];
+            if (!preset) return;
+            
+            document.getElementById('primaryColor').value = preset.primaryColor;
+            document.getElementById('primaryColorPicker').value = preset.primaryColor;
+            document.getElementById('accentColor').value = preset.accentColor;
+            document.getElementById('accentColorPicker').value = preset.accentColor;
+            document.getElementById('headerColor').value = preset.headerColor;
+            document.getElementById('headerColorPicker').value = preset.headerColor;
+            document.getElementById('backgroundColor').value = preset.backgroundColor;
+            document.getElementById('bgColorPicker').value = preset.backgroundColor;
+            document.getElementById('textColor').value = preset.textColor;
+            document.getElementById('textColorPicker').value = preset.textColor;
+            
+            updatePreview();
+        }
+        
+        function resetColors() {
+            applyPreset('classic');
+        }
+        
+        // Initialize preview
+        updatePreview();
+    </script>
+</body>
+</html>

@@ -1,50 +1,642 @@
-<html>
-<body>
-<h1>Dashboard - Welcome <%= username %></h1>
-<a href="/auth/logout" style="color: red; font-weight: bold;">[ Logout ]</a>
-<hr>
-
-<p><a href="/topics">View all available topics for subscription</a>
-<p><a href="/statistics">View Topic Access Stats</a>
-
-<h2>Your Subscribed Topics</h2>
-
-<% if (topics && topics.length > 0) { %>
-    <% topics.forEach(function(topic) { %>
-        <h3>Topic: <%= topic.name %></h3>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Topical Storm - Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #a3d7ff;
+            --accent-color: #1f81f0;
+            --bg-color: #00212f;
+            --text-color: #63b8e2;
+            --header-color: #63b8e2;
+        }
         
-        <form action="/unsubscribe" method="POST">
-            <input type="hidden" name="topicId" value="<%= topic._id %>">
-            <input type="submit" value="Unsubscribe">
-        </form>
-
-        <p><b>Recent Messages:</b>
-        <ul>
-        <% if (topic.messages && topic.messages.length > 0) { %>
-            <% topic.messages.forEach(function(msg) { %>
-                <li><%= msg.content %> - <i><%= msg.author ? msg.author.username : 'Unknown' %></i></li>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .app-header {
+            background: linear-gradient(135deg, var(--header-color), var(--primary-color));
+            color: black;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .app-header h1 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .app-header h1::before {
+            content: '⛈️';
+            font-size: 1.8rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .header-btn {
+            background: var(--accent-color);
+            color: var(--bg-color);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .header-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+        }
+        
+        .logout-btn {
+            background: rgba(56, 8, 212, 0.46);
+            color: black;
+        }
+        
+        /* Tab Bar */
+        .tab-bar {
+            background: black;
+            border-bottom: 3px solid var(--primary-color);
+            padding: 10px 20px 0;
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: 12px 24px;
+            background: #e8e8e8;
+            border: none;
+            border-radius: 15px 15px 0 0;
+            cursor: pointer;
+            font-weight: 500;
+            color: #8f94c1;
+            transition: all 0.3s;
+            black-space: nowrap;
+        }
+        
+        .tab.active {
+            background: var(--primary-color);
+            color: black;
+        }
+        
+        .tab:hover:not(.active) {
+            background: #d0d0d0;
+        }
+        
+        .new-tab-btn {
+            background: transparent;
+            border: 2px dashed var(--primary-color);
+            color: var(--primary-color);
+            padding: 12px 20px;
+            border-radius: 15px 15px 0 0;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .new-tab-btn:hover {
+            background: rgba(46, 125, 50, 0.1);
+        }
+        
+        /* Main Content */
+        .main-container {
+            display: flex;
+            height: calc(100vh - 180px);
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: black;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .sidebar-header {
+            background: var(--primary-color);
+            color: black;
+            padding: 15px;
+            font-weight: 600;
+        }
+        
+        .topic-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .topic-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .topic-item:hover {
+            background: #f8f8f8;
+        }
+        
+        .topic-item.active {
+            background: rgba(46, 125, 50, 0.1);
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .topic-name {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .topic-preview {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 5px;
+            black-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* Grid Container */
+        .grid-container {
+            flex: 1;
+            display: grid;
+            gap: 15px;
+            padding: 15px;
+            background: rgb(0, 0, 0);
+            border-radius: 15px;
+            overflow: auto;
+        }
+        
+        .grid-container.cols-1 { grid-template-columns: 1fr; }
+        .grid-container.cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-container.cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-container.cols-4 { grid-template-columns: repeat(4, 1fr); }
+        .grid-container.cols-5 { grid-template-columns: repeat(5, 1fr); }
+        .grid-container.cols-6 { grid-template-columns: repeat(6, 1fr); }
+        .grid-container.cols-7 { grid-template-columns: repeat(7, 1fr); }
+        .grid-container.cols-8 { grid-template-columns: repeat(8, 1fr); }
+        
+        .grid-container.rows-1 { grid-template-rows: 1fr; }
+        .grid-container.rows-2 { grid-template-rows: repeat(2, 1fr); }
+        
+        /* Chat Panel */
+        .chat-panel {
+            background: black;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            background: var(--primary-color);
+            color: black;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-header h3 {
+            font-weight: 600;
+        }
+        
+        .close-tab-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: black;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .close-tab-btn:hover {
+            background: rgba(255,255,255,0.4);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: black;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 15px;
+            max-width: 70%;
+        }
+        
+        .message.incoming {
+            background: black;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-right: auto;
+        }
+        
+        .message.outgoing {
+            background: var(--primary-color);
+            color: black;
+            margin-left: auto;
+        }
+        
+        .message-author {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+        }
+        
+        .message.outgoing .message-author {
+            color: rgba(5, 0, 103, 0.8);
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+        
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .chat-input input:focus {
+            border-color: var(--primary-color);
+        }
+        
+        .chat-input button {
+            background: var(--primary-color);
+            color: black;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .chat-input button:hover {
+            background: var(--header-color);
+        }
+        
+        /* Grid Controls */
+        .grid-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: black;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 100;
+            visibility: hidden;
+        }
+        
+        .grid-controls h4 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+        
+        .grid-controls label {
+            display: block;
+            margin: 8px 0;
+            font-size: 0.9rem;
+        }
+        
+        .grid-controls input[type="range"] {
+            width: 100%;
+        }
+        
+        .grid-value {
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+        
+        /* New Topic Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: black;
+            padding: 30px;
+            border-radius: 20px;
+            width: 400px;
+            max-width: 90%;
+        }
+        
+        .modal-content h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+        
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+        
+        .modal-content input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: black;
+        }
+        
+        .btn-secondary {
+            background: #eee;
+            color: #8f94c1;
+        }
+        
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #888;
+        }
+        
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <h1>Topical Storm</h1>
+        <div class="header-actions">
+            <a href="/topics" class="header-btn">Browse Topics</a>
+            <a href="/statistics" class="header-btn">Statistics</a>
+            <a href="/profile" class="header-btn">Profile</a>
+            <a href="/auth/logout" class="header-btn logout-btn">Logout</a>
+        </div>
+    </header>
+    
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+        <button class="tab active" data-topic="home">Home</button>
+        <% if (topics && topics.length > 0) { %>
+            <% topics.forEach(function(topic, index) { %>
+                <button class="tab" data-topic="<%= topic._id %>"><%= topic.name %></button>
             <% }); %>
-        <% } else { %>
-            <li>No messages yet.</li>
         <% } %>
-        </ul>
-
-        <p>Post a message to this topic:
-        <form action="/postMessage" method="POST">
-            <input type="hidden" name="topicId" value="<%= topic._id %>">
-            <input type="text" name="messageText" required>
-            <input type="submit" value="Post">
-        </form>
-        <hr>
-    <% }); %>
-<% } else { %>
-    <p>You are not subscribed to any topics.
-<% } %>
-
-<p><h3>Start a New Topic</h3>
-<form action="/createTopic" method="POST">
-<p>Topic Name: <input type="text" name="topicName" required>
-<p><input type="submit" value="Create and Subscribe"></form>
-
+        <button class="new-tab-btn" onclick="openNewTopicModal()">+ New Topic</button>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">Your Topics</div>
+            <div class="topic-list">
+                <% if (topics && topics.length > 0) { %>
+                    <% topics.forEach(function(topic) { %>
+                        <div class="topic-item" onclick="openTopic('<%= topic._id %>')">
+                            <div class="topic-name"><%= topic.name %></div>
+                            <div class="topic-preview">
+                                <%= topic.messages && topic.messages.length > 0 ? topic.messages[topic.messages.length - 1].content : 'No messages yet' %>
+                            </div>
+                        </div>
+                    <% }); %>
+                <% } else { %>
+                    <div style="padding: 20px; text-align: center; color: #888;">
+                        No subscribed topics
+                    </div>
+                <% } %>
+            </div>
+        </aside>
+        
+        <!-- Grid Container -->
+        <div class="grid-container cols-1 rows-1" id="gridContainer">
+            <!-- Home Panel -->
+            <div class="chat-panel" data-panel="home">
+                <div class="chat-header">
+                    <h3>Welcome, <%= username %>!</h3>
+                </div>
+                <div class="chat-messages">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⛈️</div>
+                        <h3>Welcome to Topical Storm</h3>
+                        <p>Select a topic from the sidebar or create a new one</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dynamic Topic Panels -->
+            <% if (topics && topics.length > 0) { %>
+                <% topics.forEach(function(topic) { %>
+                    <div class="chat-panel" data-panel="<%= topic._id %>" style="display: none;">
+                        <div class="chat-header">
+                            <h3><%= topic.name %></h3>
+                            <button class="close-tab-btn" onclick="closePanel('<%= topic._id %>')">×</button>
+                        </div>
+                        <div class="chat-messages">
+                            <% if (topic.messages && topic.messages.length > 0) { %>
+                                <% topic.messages.forEach(function(msg) { %>
+                                    <div class="message <%= msg.author && msg.author.username === username ? 'outgoing' : 'incoming' %>">
+                                        <div class="message-author"><%= msg.author ? msg.author.username : 'Unknown' %></div>
+                                        <div class="message-content"><%= msg.content %></div>
+                                        <div class="message-time"><%= new Date(msg.createdAt).toLocaleString() %></div>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <div class="empty-state">
+                                    <p>No messages yet. Start the conversation!</p>
+                                </div>
+                            <% } %>
+                        </div>
+                        <form class="chat-input" action="/postMessage" method="POST">
+                            <input type="hidden" name="topicId" value="<%= topic._id %>">
+                            <input type="text" name="messageText" placeholder="Type a message..." required>
+                            <button type="submit">Send</button>
+                        </form>
+                    </div>
+                <% }); %>
+            <% } %>
+        </div>
+    </div>
+    
+    <!-- Grid Controls -->
+    <div class="grid-controls">
+        <h4>Grid Layout</h4>
+        <label>Columns: <span class="grid-value" id="colValue">1</span></label>
+        <input type="range" id="colSlider" min="1" max="8" value="1" oninput="updateGrid()">
+        <label>Rows: <span class="grid-value" id="rowValue">1</span></label>
+        <input type="range" id="rowSlider" min="1" max="2" value="1" oninput="updateGrid()">
+    </div>
+    
+    <!-- New Topic Modal -->
+    <div class="modal" id="newTopicModal">
+        <div class="modal-content">
+            <h2>Create New Topic</h2>
+            <form action="/createTopic" method="POST">
+                <input type="text" name="topicName" placeholder="Topic name" required>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-secondary" onclick="closeNewTopicModal()">Cancel</button>
+                    <button type="submit" class="btn-primary">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                const topicId = this.dataset.topic;
+                showPanel(topicId);
+            });
+        });
+        
+        function showPanel(topicId) {
+            document.querySelectorAll('.chat-panel').forEach(panel => {
+                panel.style.display = 'none';
+            });
+            
+            const panel = document.querySelector(`[data-panel="${topicId}"]`);
+            if (panel) {
+                panel.style.display = 'flex';
+            }
+        }
+        
+        function openTopic(topicId) {
+            // Activate corresponding tab
+            document.querySelectorAll('.tab').forEach(t => {
+                if (t.dataset.topic === topicId) {
+                    t.classList.add('active');
+                } else {
+                    t.classList.remove('active');
+                }
+            });
+            showPanel(topicId);
+        }
+        
+        function closePanel(topicId) {
+            const panel = document.querySelector(`[data-panel="${topicId}"]`);
+            if (panel) {
+                panel.style.display = 'none';
+            }
+            
+            // Switch to home tab
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.remove('active');
+            });
+            document.querySelector('.tab[data-topic="home"]').classList.add('active');
+            showPanel('home');
+        }
+        
+        // Grid controls
+        function updateGrid() {
+            const cols = document.getElementById('colSlider').value;
+            const rows = document.getElementById('rowSlider').value;
+            
+            document.getElementById('colValue').textContent = cols;
+            document.getElementById('rowValue').textContent = rows;
+            
+            const container = document.getElementById('gridContainer');
+            container.className = `grid-container cols-${cols} rows-${rows}`;
+        }
+        
+        // Modal functions
+        function openNewTopicModal() {
+            document.getElementById('newTopicModal').classList.add('active');
+        }
+        
+        function closeNewTopicModal() {
+            document.getElementById('newTopicModal').classList.remove('active');
+        }
+        
+        // Close modal on outside click
+        document.getElementById('newTopicModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeNewTopicModal();
+            }
+        });
+    </script>
 </body>
 </html>

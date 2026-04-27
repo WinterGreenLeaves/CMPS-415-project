@@ -10,15 +10,13 @@ class Database {
     }
 
     _connect() {
-        // 1. Check for the key using Bryant's name
         if (!process.env.MONGO_URI) { 
             console.warn("⚠️ Running in UI Test Mode (No Database Connection)");
             this.connection = null;
             return;
         }
 
-        // 2. Actually USE the key with the SAME name
-        mongoose.connect(process.env.MONGO_URI) // This was still MONGODB_URI in your snippet
+        mongoose.connect(process.env.MONGO_URI) 
             .then(() => console.log("✅ MongoDB connected"))
             .catch(err => {
                 console.error("❌ MongoDB connection error:", err);

@@ -1,9 +1,142 @@
-<html>
-<body><h1>Login</h1>
-<form action="/auth/login" method="POST">
-<p>Username: <input type="text" name="username" required>
-<p>Password: <input type="password" name="password" required>
-<p><input type="submit" name="Submit" value="Login"></form>
-<p><a href="/register">Register here</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Topical Storm</title>
+    <style>
+        :root {
+            --primary-color: #a3d7ff;
+            --accent-color: #1f81f0;
+            --bg-color: #00212f;
+            --text-color: #63b8e2;
+            --header-color: #5900ff;
+        }        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--header-color) 0%, var(--primary-color) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-container {
+            background: black;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            width: 400px;
+            max-width: 90%;
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .login-header h1::before {
+            content: '⛈️';
+            display: block;
+            font-size: 3rem;
+        }
+        
+        .login-header p {
+            color: #8f94c1;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: var(--primary-color);
+            color: black;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .submit-btn:hover {
+            background: var(--header-color);
+        }
+        
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #8f94c1;
+        }
+        
+        .register-link a {
+            color: var(--primary-color);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>Topical Storm</h1>
+            <p>Welcome back! Please login to continue.</p>
+        </div>
+        
+        <form action="/auth/login" method="POST">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <button type="submit" class="submit-btn">Login</button>
+        </form>
+        
+        <p class="register-link">Don't have an account? <a href="/register">Register here</a></p>
+    </div>
 </body>
 </html>

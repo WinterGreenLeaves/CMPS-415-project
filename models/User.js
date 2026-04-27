@@ -16,17 +16,21 @@ const userSchema = new mongoose.Schema({
     }],
     notifications: [{
         type: String
-    }]
+    }],
+    colorPreferences: {
+        primaryColor: { type: String, default: '#291e91' },
+        accentColor: { type: String, default: '#efdf88' },
+        backgroundColor: { type: String, default: '#000000' },
+        textColor: { type: String, default: '#9eb4ed' },
+        headerColor: { type: String, default: '#271274' }
+    }
 }, { timestamps: true }); 
-//hash password before saving
+
 userSchema.pre('save', async function() {
-    // If the password hasn't changed, just return (no next needed)
     if (!this.isModified('password')) return;
-    
-    // Hash it and wait for it to finish
     this.password = await bcrypt.hash(this.password, 10);
 });
-//check password for login
+
 userSchema.methods.comparePassword = async function(candidatePassword) {
     return bcrypt.compare(candidatePassword, this.password);
 };
